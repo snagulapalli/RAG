@@ -8,9 +8,13 @@ rag:
   chunk-size: 1000
   chunk-overlap: 200
   max-distance: 1.2
-  groq-api-key: ${GROQ_API_KEY:}
-  groq-base-url: https://api.groq.com/openai/v1
-  llm-model: openai/gpt-oss-20b
+  # OpenAI-compatible chat API. Defaults to a local Ollama server.
+  # Any non-empty key works for Ollama; it does not check the value.
+  # For Groq cloud instead: base URL https://api.groq.com/openai/v1 and a real GROQ_API_KEY.
+  groq-api-key: ${GROQ_API_KEY:ollama}
+  groq-base-url: http://localhost:11434/v1
+  # Small local model. A 20B model is slow on an Intel Mac.
+  llm-model: llama3.2:3b
   # Set false once indexes exist (mirrors commenting out the build block in app.py)
   build-index-on-startup: true
   run-query-on-startup: true
@@ -19,4 +23,4 @@ rag:
 
 logging:
   level:
-    com.srini.poc.rag: INFO
+    com.example.rag: INFO
