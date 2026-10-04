@@ -7,7 +7,7 @@ This repo is a Java / Spring Boot 3.4 port of a Python + LangChain prototype I b
 ## Why it's built this way
 
 - **Local embeddings.** Documents are embedded inside the JVM with all-MiniLM-L6-v2 (quantized ONNX, via LangChain4j). The corpus is never sent to a third-party embedding API.
-- **Grounded answers.** The LLM gets only the top-k retrieved passages and is told to answer from that context alone and to name the source file.
+- **Grounded answers.** The LLM gets only the documents retrieved for the question and is told to answer from that context alone and to name the source file.
 - **Local LLM by default.** `GroqChatClient` talks to a standard OpenAI-compatible chat-completions endpoint, so going fully local is a config change, not a code change. Out of the box it points at [Ollama](https://ollama.com) on `http://localhost:11434/v1` with a small model (`llama3.2:3b`), so the question and the retrieved passages never leave the machine either. The same client can be pointed back at Groq's hosted API; see [Switching back to Groq](#switching-back-to-groq).
 
 ## How it works
@@ -72,7 +72,7 @@ export GROQ_API_KEY=your_key_here
 ./gradlew bootRun --args="--rag.groq-base-url=https://api.groq.com/openai/v1 --rag.llm-model=openai/gpt-oss-20b"
 ```
 
-With Groq, the question and the top-k retrieved passages are sent to Groq's servers to generate the answer. Document embedding and the vector index still run locally in either mode.
+With Groq, the question and the retrieved documents (full text for Markdown ADRs) are sent to Groq's servers to generate the answer. Document embedding and the vector index still run locally in either mode.
 
 ## REST API
 
