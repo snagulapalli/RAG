@@ -1,0 +1,22 @@
+server:
+  port: 8080
+
+rag:
+  data-dir: data
+  persist-dir: faiss_store
+  embedding-model: all-MiniLM-L6-v2
+  chunk-size: 1000
+  chunk-overlap: 200
+  max-distance: 1.2
+  groq-api-key: ${GROQ_API_KEY:}
+  groq-base-url: https://api.groq.com/openai/v1
+  llm-model: openai/gpt-oss-20b
+  # Set false once indexes exist (mirrors commenting out the build block in app.py)
+  build-index-on-startup: true
+  run-query-on-startup: true
+  default-query: What is attention mechanism?
+  default-top-k: 3
+
+logging:
+  level:
+    com.srini.poc.rag: INFO
