@@ -38,3 +38,11 @@ dependencies {
 tasks.withType<Test> {
     useJUnitPlatform()
 }
+
+// DJL HuggingFace tokenizers 0.30.0+ ships no native library for Intel Macs (osx-x86_64).
+// Pin 0.29.0 so in-JVM embeddings load on x86_64 macOS.
+configurations.all {
+    resolutionStrategy {
+        force("ai.djl.huggingface:tokenizers:0.29.0")
+    }
+}
