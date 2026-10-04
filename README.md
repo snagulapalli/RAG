@@ -8,7 +8,7 @@ This repo is a Java / Spring Boot 3.4 port of a Python + LangChain prototype I b
 
 - **Local embeddings.** Documents are embedded inside the JVM with all-MiniLM-L6-v2 (quantized ONNX, via LangChain4j). The corpus is never sent to a third-party embedding API.
 - **Grounded answers.** The LLM gets only the documents retrieved for the question and is told to answer from that context alone and to name the source file.
-- **Local LLM by default.** `GroqChatClient` talks to a standard OpenAI-compatible chat-completions endpoint, so going fully local is a config change, not a code change. Out of the box it points at [Ollama](https://ollama.com) on `http://localhost:11434/v1` with a small model (`llama3.2:3b`), so the question and the retrieved passages never leave the machine either. The same client can be pointed back at Groq's hosted API; see [Switching back to Groq](#switching-back-to-groq).
+- **Local LLM by default.** `GroqChatClient` talks to a standard OpenAI-compatible chat-completions endpoint, so going fully local is a config change, not a code change. Out of the box it points at [Ollama](https://ollama.com) on `http://localhost:11434/v1` with a small model (`llama3.2:3b`), so the question and the retrieved documents never leave the machine either. The same client can be pointed back at Groq's hosted API; see [Switching back to Groq](#switching-back-to-groq).
 
 ## How it works
 
@@ -27,7 +27,9 @@ data/ (md, txt, pdf, docx, xlsx, csv, json)
 
 ## Run
 
-Requirements: Java 17+ and a running [Ollama](https://ollama.com) server. The Gradle wrapper is included. No API key is needed for the local setup.
+Requirements: Java 17+ (tested on Java 21) and a running [Ollama](https://ollama.com) server. The Gradle wrapper (Gradle 8.12.1) is included. No API key is needed for the local setup.
+
+Tested on an Intel Mac (x86_64). `build.gradle.kts` pins `ai.djl.huggingface:tokenizers` to 0.29.0, because 0.30.0 and later ship no native tokenizer library for Intel Macs and the embedding model fails to load without it.
 
 Pull the model once before the first run. On an Intel Mac a 20B model is slow, so the default is a 3B one:
 
@@ -82,6 +84,26 @@ curl -s http://localhost:8080/api/search -H 'Content-Type: application/json' \
 
 curl -s -X POST http://localhost:8080/api/reindex   # rebuild the index from data/
 ```
+
+## Example
+
+A real request against the sample data, running fully local (Ollama, `llama3.2:3b`):
+
+```bash
+curl -s http://localhost:8080/api/search -H 'Content-Type: application/json' \
+  -d '{"query":"What version of java to use for new microservice","topK":3}'
+```
+
+```json
+{
+  "query": "What version of java to use for new microservice",
+  "summary": "1. Java 21\n2. Related details: The current LTS version recommended for new projects is Java 21, valid through Sept 2028. Any library selected must support Java 21. \n\nADR-001-sample.md"
+}
+```
+
+The answer comes only from `ADR-001-sample.md` and ends with its source file name. Chunks whose distance exceeds the cutoff (`rag.max-distance`, default 1.2) are dropped before the prompt is built, so weak matches never reach the model. For example, on the built-in startup question ("What is attention mechanism?"), an ADR-002 chunk at distance 1.72 was excluded.
+
+**Latency:** this request took about 16 seconds on an Intel Mac running on CPU. Nearly all of that is LLM generation; embedding the question and searching the index take milliseconds. A GPU, a hosted model, or a smaller model cuts it sharply.
 
 ## Sample data
 
